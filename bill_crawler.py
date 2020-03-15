@@ -428,8 +428,8 @@ def _print_help():
     print("Arguments:")
     print("-----------")
     print("\t-d, --details              Show details, every expense line by type")
-    print("\t-v, -verbose               Verbose output. Just for debugging ...")
-    print("\t-vv, -very-verbose         Very verbose output. Just for debugging (really hard) ...")
+    print("\t-v, --verbose               Verbose output. Just for debugging ...")
+    print("\t-vv, --very-verbose         Very verbose output. Just for debugging (really hard) ...")
     print("")   
 
 if __name__== "__main__":   
@@ -440,11 +440,11 @@ if __name__== "__main__":
         if arg == "-h" or arg == "--help":
             _print_help()
             sys.exit(0) 
-        elif arg == "-v":
+        elif arg == "-v" or arg == "-.verbose":
             VERBOSE = True
-        elif arg == "-vv":
+        elif arg == "-vv" or arg == "--very-verbose":
             VERY_VERBOSE = True
-        elif arg == "-d":
+        elif arg == "-d" or arg == "--details":
             DETAILED_REPORT = True    
         else:
             first_param=arg
