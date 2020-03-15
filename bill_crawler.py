@@ -58,6 +58,9 @@ EXPENSES_TYPE_PATTERNS['^GALLAGHER\'S$'] = 'FOOD'
 EXPENSES_TYPE_PATTERNS['^SOPRANOS$'] = 'FOOD'
 EXPENSES_TYPE_PATTERNS['^MVD$'] = 'FOOD'
 EXPENSES_TYPE_PATTERNS['^QR$'] = 'FOOD'
+EXPENSES_TYPE_PATTERNS['^MONTEVIDEO BEER COMP$'] = 'FOOD'
+EXPENSES_TYPE_PATTERNS['^BUENA COSTUMBRE$'] = 'FOOD'
+
 
 EXPENSES_TYPE_PATTERNS['^.* CALZADOS$'] = 'CLOTHING'
 EXPENSES_TYPE_PATTERNS['^MISTRAL$'] = 'CLOTHING'
@@ -79,6 +82,7 @@ EXPENSES_TYPE_PATTERNS['^SUPER ARIEL.*'] = 'SUPERMARKET'
 EXPENSES_TYPE_PATTERNS['^SUPERMERCADO.*'] = 'SUPERMARKET'
 EXPENSES_TYPE_PATTERNS['.*L\. GROSS Y ASO.*'] = 'SUPERMARKET'
 EXPENSES_TYPE_PATTERNS['^SAMUD SABORES DEL MU*'] = 'SUPERMARKET'
+EXPENSES_TYPE_PATTERNS['^GEANT$'] = 'SUPERMARKET'
 
 EXPENSES_TYPE_PATTERNS['^ANCAP .*'] = 'FUEL'
 EXPENSES_TYPE_PATTERNS['^PETROBRAS .*'] = 'FUEL'
@@ -108,7 +112,7 @@ EXPENSES_TYPE_PATTERNS['^CLUB MALVIN.*'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^DTO ITA.*\- MALV.*N$'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^DBD BOOK$'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^PASSENGER$'] = 'ENTERTAINMENT'
-EXPENSES_TYPE_PATTERNS['^COPACABANA SHOPPING$'] = 'ENTERTAINMENT' # COPACABANA STORE
+EXPENSES_TYPE_PATTERNS['^COPACABANA SHOPPING$'] = 'ENTERTAINMENT' # ELECTRONICS
 EXPENSES_TYPE_PATTERNS['^MACRI SPORT CENTER$'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^FOTOESTUDIO 18$'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^LIBRERIA.*'] = 'ENTERTAINMENT'
@@ -126,6 +130,9 @@ EXPENSES_TYPE_PATTERNS['^BANCO DE SEGUROS$'] = 'CAR'
 EXPENSES_TYPE_PATTERNS['^MAPFRE$'] = 'CREDIT_CARD_COST'
 
 EXPENSES_TYPE_PATTERNS['^SAN ROQUE$'] = 'HEALTH'
+EXPENSES_TYPE_PATTERNS['^ASOC.ESPA.OLA.*'] = 'HEALTH'
+
+EXPENSES_TYPE_PATTERNS['^ANTEL MOVIL.*'] = 'PHONE'
 
 
 # ------------------------------ CLASSES ------------------------------
@@ -145,7 +152,7 @@ class Expense:
     def __str__(self):
         return self.title + " - " + self.date +  " - " + self.card_last_digits + " + " + self.currency_code + " " + str(self.amount)
 
-# ------------------------------ RPIVATE FUNCTIONS ------------------------------
+# ------------------------------ PRIVATE FUNCTIONS ------------------------------
 
 def _get_pdf_author(path):
     with open(path, 'rb') as f:
@@ -251,8 +258,8 @@ def _itau_cc_parser_do(file_name):
             last_expense_cache = None # in order to apply tax discounts ...
 
             for line in lines:
-
-                line_length = len(line.strip())
+                line = line.strip()
+                line_length = len(line)
 
                 if VERY_VERBOSE: print("\n" * 3)
                 if VERY_VERBOSE: print("\tRAW LINE BEFORE FILTER: " + line)
@@ -300,7 +307,7 @@ def _itau_cc_parser_do(file_name):
                         if VERBOSE: print("\t\t\tDOLLAR:")
                         if VERBOSE: print("\t\t\t\tAmount:" + str(reference_line_dollar_amount))
                         if VERBOSE: print("\t\t\t\tIndex:" + str(reference_line_dollar_index))
-                        if VERBOSE:  print("\t\t\tLOCAL:")
+                        if VERBOSE: print("\t\t\tLOCAL:")
                         if VERBOSE: print("\t\t\t\tAmount:" + str(reference_line_local_amount))
                         if VERBOSE: print("\t\t\t\tIndex:" + str(reference_line_local_index))
                         if VERBOSE: print("\n")
@@ -334,47 +341,11 @@ def _itau_cc_parser_do(file_name):
                             is_dolar_currency = True
                         else:
                             is_local_currency = True 
-                
-
-                    '''
-                    if reference_line_length is None:
-                        if VERBOSE: print("WARNING: Could not resolve reference line! (useful to parse currencies in a better way)")
-                            
-                        is_dolar_currency = raw_amount_first_index != raw_amount_last_index
-                        is_dolar_currency = is_dolar_currency or line_length == 94
-                        if not is_dolar_currency:
-                            is_a_dolar_line_length = line_length >= 92 and line_length <= 94
-                            is_a_dolar_amount_index = raw_amount_first_index == 87 or raw_amount_first_index == 88
-                            is_dolar_currency = is_a_dolar_line_length and is_a_dolar_amount_index
-
-                        is_local_currency = not is_dolar_currency
-
-                    else:
-                        is_dolar_currency = line_length == reference_line_length
-                        is_local_currency = not is_dolar_currency
-                    '''
-
-                    '''
-                    # new pdf lengths ...
-                    is_dolar_currency = line_length == 108 or line_length == 94
-                    is_local_currency = line_length == 98
-
-                    # old pdf lengths ...
-                    if not is_dolar_currency and not is_local_currency:
-                        is_dolar_currency = is_dolar_currency or line_length == 93
-                        is_local_currency = is_local_currency or line_length == 84
-
-                    # old pdf lengths ...
-                    if not is_dolar_currency and not is_local_currency:
-                        is_dolar_currency = is_dolar_currency or line_length == 92
-                        is_local_currency = is_local_currency or line_length == 83
-                    '''
 
                     if VERBOSE: print("\t\tis_dolar_currency:\t" + str(is_dolar_currency))
                     if VERBOSE: print("\t\tis_local_currency:\t" + str(is_local_currency))
 
                     
-
                     if ((is_dolar_currency or is_local_currency)):
 
                         # parsing date ...
@@ -432,13 +403,44 @@ def _itau_cc_parser_do(file_name):
     return expenses_by_type
     
 # ------------------------------ MAIN ------------------------------
+def _print_help():
+    print("")
+    print("Bill expenses report generator")
+    print("")
+    print("(Currently, only supports Itaú credit card bills)")
+    print("")
+    
+    print("Usage:")
+    print("------")
+    print("\tbill_crawler.py [current folder file filter] [modifiers]")
+    print("\t\tScan all pdfs files in current folder")
+    print("")
+    
+    print("Usage examples:")
+    print("---------------")
+    print("\tbill_crawler.py")
+    print("\t  or")
+    print("\tbill_crawler.py V_22.pdf -d")
+    print("\t  or")
+    print("\tbill_crawler.py -d -v")
+    print("")
+
+    print("Arguments:")
+    print("-----------")
+    print("\t-d, --details              Show details, every expense line by type")
+    print("\t-v, -verbose               Verbose output. Just for debugging ...")
+    print("\t-vv, -very-verbose         Very verbose output. Just for debugging (really hard) ...")
+    print("")   
 
 if __name__== "__main__":   
 
     current_folder = '.'
     first_param = None
     for arg in sys.argv[1:]:
-        if arg == "-v":
+        if arg == "-h" or arg == "--help":
+            _print_help()
+            sys.exit(0) 
+        elif arg == "-v":
             VERBOSE = True
         elif arg == "-vv":
             VERY_VERBOSE = True
