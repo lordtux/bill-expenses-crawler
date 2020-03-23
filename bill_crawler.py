@@ -158,17 +158,34 @@ class Expense:
     # class attributes ...
 
     # initializer / instance attributes ...
-    def __init__(self, title, date, card_last_digits, amount, currency_code):
+    def __init__(self, title, date, card_last_digits, amount, currency_code, bill_owner, bill_issue_date):
         super().__init__()
         self.title = title
         self.date = date
         self.card_last_digits = card_last_digits
         self.amount = amount # decimal.Decimal data type
         self.currency_code = currency_code
-    
+        self.bill_owner = bill_owner
+        self.bill_issue_date = bill_issue_date
+
     def __str__(self):
         # return self.title + " - " + self.date +  " - " + self.card_last_digits + " + " + self.currency_code + " " + str(self.amount)
         return self.title + " - "  + self.currency_code + ": " + str(self.amount)
+
+
+class ExpensesBill:
+    # class attributes ...
+
+    # initializer / instance attributes ...
+    def __init__(self, bill_owner, bill_issue_date, expenses):
+        super().__init__()
+        self.bill_owner = bill_owner
+        self.bill_issue_date = bill_issue_date
+        self.expenses = expenses
+
+    def __str__(self):
+        # TODO - IMPLEMENT __str__() and to_graph methods !!!
+        return self.bill_owner + " - "  + self.bill_issue_date + ": " + self.bill_issue_date + " - " + str(expenses)
 
 # ------------------------------ PRIVATE FUNCTIONS ------------------------------
 
@@ -253,6 +270,9 @@ def _itau_cc_parser_do(file_name):
 
     expenses_by_type={}
 
+    bill_issue_date = None
+    bill_owner = None
+
     # iterate over all the pages ...
     for page in pdf:
         page=page.encode("utf-8")
@@ -275,7 +295,19 @@ def _itau_cc_parser_do(file_name):
 
             last_expense_cache = None # in order to apply tax discounts ...
 
+            current_line_index =0
             for line in lines:
+                current_line_index +=1
+
+                if bill_issue_date is None and current_line_index == 2:
+                    bill_issue_date = line.strip()
+                    print("\nBill issue date: \t" + bill_issue_date)
+
+                if bill_owner is None and current_line_index == 3:
+                    bill_owner = line.strip()
+                    print("Bill owner: \t\t" + bill_owner + "\n")
+                
+
                 line = line.strip()
                 line_length = len(line)
 
@@ -289,12 +321,12 @@ def _itau_cc_parser_do(file_name):
                     line_list = list(filter(lambda x: x != '' and is_decimal(x), line[45:].split(' ')))
                     amount_str = line_list[0].replace(',','.')
                     amount_decimal = decimal.Decimal(amount_str)
-                    expense = Expense(ITAU_LIFE_INSURANCE, '??/??/??', 'XXXX', amount_decimal, LOCAL_CURRENCY_CODE)
+                    expense = Expense(ITAU_LIFE_INSURANCE, '??/??/??', 'XXXX', amount_decimal, LOCAL_CURRENCY_CODE, bill_owner, bill_issue_date)
                     _add_item_to_multimap(expenses_by_type, EXPENSES_TYPE_PATTERNS['^' + ITAU_LIFE_INSURANCE + '$'], expense)
 
                     amount_str = line_list[-1].replace(',','.')
                     amount_decimal = decimal.Decimal(amount_str)
-                    expense = Expense(ITAU_LIFE_INSURANCE, '??/??/??', 'XXXX', amount_decimal, DOLLAR_CURRENCY_CODE)
+                    expense = Expense(ITAU_LIFE_INSURANCE, '??/??/??', 'XXXX', amount_decimal, DOLLAR_CURRENCY_CODE, bill_owner, bill_issue_date)
                     _add_item_to_multimap(expenses_by_type, EXPENSES_TYPE_PATTERNS['^' + ITAU_LIFE_INSURANCE + '$'], expense)
 
 
@@ -411,7 +443,7 @@ def _itau_cc_parser_do(file_name):
 
                                 currency_code = DOLLAR_CURRENCY_CODE if is_dolar_currency else LOCAL_CURRENCY_CODE 
 
-                                expense = Expense(expense_title, expense_date, cc_last_digits, expense_amount, currency_code)
+                                expense = Expense(expense_title, expense_date, cc_last_digits, expense_amount, currency_code, bill_owner, bill_issue_date)
                                 last_expense_cache = expense
                                 if VERBOSE: print("\t\tRESOLVED LINE: \t\t" + expense.__str__())
 
