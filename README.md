@@ -27,7 +27,7 @@
 
 ## Example outputs
 
-### Scann full current folder
+### Scan full current folder
 ```bash
 $ ./bill_crawler.py
 
