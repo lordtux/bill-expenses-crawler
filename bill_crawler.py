@@ -22,7 +22,7 @@ REFERENCE_LINE_REGEX_PATTERN = ".* PAGOS.*"
 BLACKLISTED_LINES_REGEX_PATTERN = ".* PAGOS.*"
 
 ITAU_CC_PARSER_AUTHOR_REGEX_PATTERN = ".*Banco Ita.* Uruguay S\.A\..*"
-
+ITAU_LIFE_INSURANCE = 'SEGURO DE VIDA SOBRE SALDO'
 DOLLAR_CURRENCY_CODE = 'USD' 
 LOCAL_CURRENCY_CODE = 'UYU' 
 
@@ -285,19 +285,17 @@ def _itau_cc_parser_do(file_name):
                 first_char_is_numeric = line[0].isdigit()
 
                 # if it is a detail line (by length) ...
-                if re.match('SEGURO DE VIDA SOBRE SALDO', line):
+                if re.match(ITAU_LIFE_INSURANCE, line):
                     line_list = list(filter(lambda x: x != '' and is_decimal(x), line[45:].split(' ')))
                     amount_str = line_list[0].replace(',','.')
                     amount_decimal = decimal.Decimal(amount_str)
-                    expense = Expense('SEGURO DE VIDA SOBRE SALDO', '??/??/??', 'XXXX', amount_decimal, LOCAL_CURRENCY_CODE)
-                    _add_item_to_multimap(expenses_by_type, OTHER_EXPENSE_TYPE_TOKEN, expense)
+                    expense = Expense(ITAU_LIFE_INSURANCE, '??/??/??', 'XXXX', amount_decimal, LOCAL_CURRENCY_CODE)
+                    _add_item_to_multimap(expenses_by_type, EXPENSES_TYPE_PATTERNS['^' + ITAU_LIFE_INSURANCE + '$'], expense)
 
                     amount_str = line_list[-1].replace(',','.')
                     amount_decimal = decimal.Decimal(amount_str)
-                    expense = Expense('SEGURO DE VIDA SOBRE SALDO', '??/??/??', 'XXXX', amount_decimal, DOLLAR_CURRENCY_CODE)
-                    _add_item_to_multimap(expenses_by_type, OTHER_EXPENSE_TYPE_TOKEN, expense)
-
-                    
+                    expense = Expense(ITAU_LIFE_INSURANCE, '??/??/??', 'XXXX', amount_decimal, DOLLAR_CURRENCY_CODE)
+                    _add_item_to_multimap(expenses_by_type, EXPENSES_TYPE_PATTERNS['^' + ITAU_LIFE_INSURANCE + '$'], expense)
 
 
                 if re.match(DETAIL_LINE_REGEX_PATTERN, line) and not re.match(BLACKLISTED_LINES_REGEX_PATTERN, line):
