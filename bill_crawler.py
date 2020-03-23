@@ -60,6 +60,10 @@ EXPENSES_TYPE_PATTERNS['^MVD$'] = 'FOOD'
 EXPENSES_TYPE_PATTERNS['^QR$'] = 'FOOD'
 EXPENSES_TYPE_PATTERNS['^MONTEVIDEO BEER COMP$'] = 'FOOD'
 EXPENSES_TYPE_PATTERNS['^BUENA COSTUMBRE$'] = 'FOOD'
+EXPENSES_TYPE_PATTERNS['^PAN Y PIZZA$'] = 'FOOD'
+EXPENSES_TYPE_PATTERNS['^CHILL OUT LA BARRA$'] = 'FOOD'
+EXPENSES_TYPE_PATTERNS['^LA CIGALE$'] = 'FOOD'
+EXPENSES_TYPE_PATTERNS['^RESTAURANT .*'] = 'FOOD'
 
 
 EXPENSES_TYPE_PATTERNS['^.* CALZADOS$'] = 'CLOTHING'
@@ -70,6 +74,8 @@ EXPENSES_TYPE_PATTERNS['^ONLY$'] = 'CLOTHING'
 EXPENSES_TYPE_PATTERNS['^H&M$'] = 'CLOTHING'
 EXPENSES_TYPE_PATTERNS['^ADAM TAILOR$'] = 'CLOTHING'
 EXPENSES_TYPE_PATTERNS['^LOJAS RENNER$'] = 'CLOTHING'
+EXPENSES_TYPE_PATTERNS['^BENSON & THOMAS$'] = 'CLOTHING'
+EXPENSES_TYPE_PATTERNS['^SUNFER$'] = 'CLOTHING'
 
 EXPENSES_TYPE_PATTERNS['^DEVOTO (EXPRESS|SUPERMERCADO)$'] = 'SUPERMARKET'
 EXPENSES_TYPE_PATTERNS['^MACRO MERCADO$'] = 'SUPERMARKET'
@@ -83,6 +89,9 @@ EXPENSES_TYPE_PATTERNS['^SUPERMERCADO.*'] = 'SUPERMARKET'
 EXPENSES_TYPE_PATTERNS['.*L\. GROSS Y ASO.*'] = 'SUPERMARKET'
 EXPENSES_TYPE_PATTERNS['^SAMUD SABORES DEL MU*'] = 'SUPERMARKET'
 EXPENSES_TYPE_PATTERNS['^GEANT$'] = 'SUPERMARKET'
+EXPENSES_TYPE_PATTERNS['^SUPERSOL$'] = 'SUPERMARKET'
+EXPENSES_TYPE_PATTERNS['^FROG MAXISHOP$'] = 'SUPERMARKET'
+EXPENSES_TYPE_PATTERNS['^EL GRANERO$'] = 'SUPERMARKET'
 
 EXPENSES_TYPE_PATTERNS['^ANCAP .*'] = 'FUEL'
 EXPENSES_TYPE_PATTERNS['^PETROBRAS .*'] = 'FUEL'
@@ -100,13 +109,14 @@ EXPENSES_TYPE_PATTERNS['^.*BOOKING.COM$'] = 'TRAVEL'
 EXPENSES_TYPE_PATTERNS['.*TAX.?FREE.*'] = 'TRAVEL'
 EXPENSES_TYPE_PATTERNS['^GLOBALBLUE.*'] = 'TRAVEL'
 
-EXPENSES_TYPE_PATTERNS['^UBER .*'] = 'TANSPORT'
+EXPENSES_TYPE_PATTERNS['^UBER.*'] = 'TANSPORT'
 
 EXPENSES_TYPE_PATTERNS['^AMZN MKTP .*'] = 'ONLINE_SHOPPING'
 EXPENSES_TYPE_PATTERNS['^PUNTOMIO .*'] = 'ONLINE_SHOPPING'
 EXPENSES_TYPE_PATTERNS['^DHL COURIER$'] = 'ONLINE_SHOPPING'
 EXPENSES_TYPE_PATTERNS['^CORREO URUGUAYO\-TRIB$'] = 'ONLINE_SHOPPING'
 
+EXPENSES_TYPE_PATTERNS['^SPOTIFY.*'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^NETFLIX\.COM$'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^CLUB MALVIN.*'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^DTO ITA.*\- MALV.*N$'] = 'ENTERTAINMENT'
@@ -116,7 +126,10 @@ EXPENSES_TYPE_PATTERNS['^COPACABANA SHOPPING$'] = 'ENTERTAINMENT' # ELECTRONICS
 EXPENSES_TYPE_PATTERNS['^MACRI SPORT CENTER$'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^FOTOESTUDIO 18$'] = 'ENTERTAINMENT'
 EXPENSES_TYPE_PATTERNS['^LIBRERIA.*'] = 'ENTERTAINMENT'
- 
+EXPENSES_TYPE_PATTERNS['^APPLE.COM.*'] = 'ENTERTAINMENT'
+EXPENSES_TYPE_PATTERNS['^LAOFERTAIRRES$'] = 'ENTERTAINMENT'
+EXPENSES_TYPE_PATTERNS['^BACKSTREET BOYS$'] = 'ENTERTAINMENT'
+
 EXPENSES_TYPE_PATTERNS['^ARREDO$'] = 'HOME'
 EXPENSES_TYPE_PATTERNS['^TIENDAS MONTEVIDEO$'] = 'HOME'
 EXPENSES_TYPE_PATTERNS['^SODIMAC .*'] = 'HOME'
@@ -127,13 +140,17 @@ EXPENSES_TYPE_PATTERNS['^PUNTA CARRETAS SHOPP$'] = 'PARKING'
 
 EXPENSES_TYPE_PATTERNS['^BANCO DE SEGUROS$'] = 'CAR'
 
-EXPENSES_TYPE_PATTERNS['^MAPFRE$'] = 'CREDIT_CARD_COST'
+EXPENSES_TYPE_PATTERNS['^MAPFRE$'] = 'INSURANCE'
+EXPENSES_TYPE_PATTERNS['^SEGURO DE VIDA SOBRE SALDO$'] = 'INSURANCE'
 
 EXPENSES_TYPE_PATTERNS['^SAN ROQUE$'] = 'HEALTH'
+EXPENSES_TYPE_PATTERNS['^FARMASHOP$'] = 'HEALTH'
+EXPENSES_TYPE_PATTERNS['^FARMACIA .*'] = 'HEALTH'
 EXPENSES_TYPE_PATTERNS['^ASOC.ESPA.OLA.*'] = 'HEALTH'
 
 EXPENSES_TYPE_PATTERNS['^ANTEL MOVIL.*'] = 'PHONE'
 
+EXPENSES_TYPE_PATTERNS['^C.J.P.P.U. APORTES$'] = 'RETIREMENT_ISURANCE'
 
 # ------------------------------ CLASSES ------------------------------
 
@@ -150,7 +167,8 @@ class Expense:
         self.currency_code = currency_code
     
     def __str__(self):
-        return self.title + " - " + self.date +  " - " + self.card_last_digits + " + " + self.currency_code + " " + str(self.amount)
+        # return self.title + " - " + self.date +  " - " + self.card_last_digits + " + " + self.currency_code + " " + str(self.amount)
+        return self.title + " - "  + self.currency_code + ": " + str(self.amount)
 
 # ------------------------------ PRIVATE FUNCTIONS ------------------------------
 
@@ -267,6 +285,21 @@ def _itau_cc_parser_do(file_name):
                 first_char_is_numeric = line[0].isdigit()
 
                 # if it is a detail line (by length) ...
+                if re.match('SEGURO DE VIDA SOBRE SALDO', line):
+                    line_list = list(filter(lambda x: x != '' and is_decimal(x), line[45:].split(' ')))
+                    amount_str = line_list[0].replace(',','.')
+                    amount_decimal = decimal.Decimal(amount_str)
+                    expense = Expense('SEGURO DE VIDA SOBRE SALDO', '??/??/??', 'XXXX', amount_decimal, LOCAL_CURRENCY_CODE)
+                    _add_item_to_multimap(expenses_by_type, OTHER_EXPENSE_TYPE_TOKEN, expense)
+
+                    amount_str = line_list[-1].replace(',','.')
+                    amount_decimal = decimal.Decimal(amount_str)
+                    expense = Expense('SEGURO DE VIDA SOBRE SALDO', '??/??/??', 'XXXX', amount_decimal, DOLLAR_CURRENCY_CODE)
+                    _add_item_to_multimap(expenses_by_type, OTHER_EXPENSE_TYPE_TOKEN, expense)
+
+                    
+
+
                 if re.match(DETAIL_LINE_REGEX_PATTERN, line) and not re.match(BLACKLISTED_LINES_REGEX_PATTERN, line):
 
                     # resolve reference length in other to parse amount currencies better ...
