@@ -39,7 +39,7 @@ mccabe==0.6.1
 netifaces==0.10.4
 oauth==1.0.1
 olefile==0.46
-paramiko==2.7.1
+paramiko==2.10.1
 pdf==2020.1.6
 pdfminer.six==20181108
 pdftotext==2.1.4
