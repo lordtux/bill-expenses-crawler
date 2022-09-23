@@ -46,7 +46,7 @@ pdftotext==2.1.4
 pexpect==4.2.1
 Pillow==7.0.0
 ply==3.11
-protobuf==3.0.0
+protobuf==3.18.3
 pyasn1==0.4.8
 pycairo==1.16.2
 pycparser==2.19
